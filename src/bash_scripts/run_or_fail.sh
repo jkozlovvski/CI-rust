@@ -1,11 +1,11 @@
 # !/bin/bash
 
-function run_or_fail {
-    first_arg = $1
-    shift
-    $@
+run_or_fail() {
+  local explanation=$1
+  shift 1
+  "$@"
   if [ $? != 0 ]; then
-    echo $first_arg
+    echo $explanation 1>&2
     exit 1
   fi
 }

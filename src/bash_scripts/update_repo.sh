@@ -1,5 +1,4 @@
 # !/bin/bash
-echo "Updating repository $1"
 
 source run_or_fail.sh
 rm -f .commit_id
