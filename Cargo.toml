@@ -1,0 +1,25 @@
+[package]
+name = "continous_integration_tool"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+
+[[bin]]
+name = "continous_integration_tool"
+path = "src/main.rs"
+
+[[bin]]
+name = "repo_observer"
+path = "src/repo_observer/repo_observer.rs"
+
+[lib]
+name = "repo_observer_lib"
+path = "src/repo_observer/lib.rs"
+
+[[bin]]
+name = "dispatcher"
+path = "src/dispatcher/dispatcher.rs"
