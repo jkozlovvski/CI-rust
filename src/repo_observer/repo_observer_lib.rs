@@ -68,18 +68,6 @@ pub struct DispatcherConnection {
     dispatcher_socket: SocketAddrV4,
 }
 
-#[derive(Serialize, Deserialize)]
-pub enum Request {
-    CheckStatus,
-    Update(String),
-}
-
-#[derive(Serialize, Deserialize)]
-pub enum Response {
-    Ok,
-    Error,
-}
-
 impl DispatcherConnection {
     pub fn new(dispatcher_socket: SocketAddrV4) -> DispatcherConnection {
         DispatcherConnection { dispatcher_socket }
@@ -114,4 +102,16 @@ impl DispatcherConnection {
     pub fn update(&self, commit_id: String) -> Response {
         self.send_massage(Request::Update(commit_id))
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum Request {
+    CheckStatus,
+    Update(String),
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum Response {
+    Ok,
+    Error,
 }

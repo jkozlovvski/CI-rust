@@ -17,10 +17,6 @@ path = "src/main.rs"
 name = "repo_observer"
 path = "src/repo_observer/repo_observer.rs"
 
-[lib]
-name = "repo_observer_lib"
-path = "src/repo_observer/lib.rs"
-
 [[bin]]
 name = "dispatcher"
 path = "src/dispatcher/dispatcher.rs"

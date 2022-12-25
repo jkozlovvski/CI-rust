@@ -1,3 +1,5 @@
+mod repo_observer_lib;
+
 use repo_observer_lib::*;
 use std::env;
 use std::path::Path;
