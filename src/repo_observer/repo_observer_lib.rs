@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use log::{error, info};
+use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::net::{Ipv4Addr, SocketAddrV4, TcpStream};
 use std::{env, fs};
@@ -49,7 +49,7 @@ impl DispatcherConfig {
 
         let dispatcher_host: (u8, u8, u8, u8) = match args.next() {
             Some(arg) => {
-                let mut host = arg.split(".");
+                let mut host = arg.split('.');
                 (
                     host.next().unwrap().parse::<u8>().unwrap(),
                     host.next().unwrap().parse::<u8>().unwrap(),

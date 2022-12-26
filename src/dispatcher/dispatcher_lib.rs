@@ -22,7 +22,7 @@ impl DispatcherConfig {
 
         let dispatcher_host: (u8, u8, u8, u8) = match args.next() {
             Some(arg) => {
-                let mut host = arg.split(".");
+                let mut host = arg.split('.');
                 (
                     host.next().unwrap().parse::<u8>().unwrap(),
                     host.next().unwrap().parse::<u8>().unwrap(),
@@ -95,7 +95,7 @@ pub fn runners_checker(server: Arc<Server>) {
         }
 
         for (i, runner) in server.runners.lock().unwrap().iter().enumerate() {
-            if let Err(_) = TcpStream::connect(runner) {
+            if TcpStream::connect(runner).is_err() {
                 info!(
                     "Runner {} is dead, deleting runner from the pool of available ones",
                     runner
