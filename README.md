@@ -21,3 +21,13 @@ As the components are complementary to each other (via communicating) it's tough
 serde, 
 
 ## Potential todo's and refactors left from part 1:
+
+
+## How to run the certain binaries
+First change local_envs file to appropriate paths on your machine, then source local_envs, then you can run specified binary in this manner:
+
+```rust
+cargo run --bin repo_observer
+cargo run --bin dispatcher
+```
+If you want to print debug messages, procede cargo command with `RUST_LOG=debug`.
