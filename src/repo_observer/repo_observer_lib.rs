@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use log::{error, info};
 use std::io::Write;
 use std::net::{Ipv4Addr, SocketAddrV4, TcpStream};
 use std::{env, fs};
@@ -7,7 +8,7 @@ pub fn get_path_to_script() -> String {
     match env::var("UPDATE_SCRIPT_PATH") {
         Ok(path) => path,
         Err(err) => {
-            println!("Error while getting path to script: {:?}", err);
+            error!("Error while getting path to script: {:?}", err);
             std::process::exit(1);
         }
     }
@@ -17,7 +18,17 @@ fn get_repo_path() -> String {
     match env::var("REPO_OBSERVER_PATH") {
         Ok(path) => path,
         Err(err) => {
-            println!("Error while getting path to repository: {:?}", err);
+            error!("Error while getting path to repository: {:?}", err);
+            std::process::exit(1);
+        }
+    }
+}
+
+pub fn get_scripts_dir_path() -> String {
+    match env::var("SCRIPTS_DIR_PATH") {
+        Ok(path) => path,
+        Err(err) => {
+            error!("Error while getting path to scripts directory: {:?}", err);
             std::process::exit(1);
         }
     }
@@ -86,6 +97,8 @@ impl DispatcherConnection {
     fn send_massage(&self, request: Request) -> Response {
         match TcpStream::connect(self.dispatcher_socket) {
             Ok(mut stream) => {
+                info!("Connected to dispatcher");
+
                 serde_json::to_writer(&stream, &request).unwrap();
                 stream.flush().unwrap();
                 let mut deserializer =
@@ -93,23 +106,25 @@ impl DispatcherConnection {
                 match Response::deserialize(&mut deserializer) {
                     Ok(_) => Response::Ok,
                     Err(err) => {
-                        println!("Error while reading response: {:?}", err);
+                        error!("Error while reading response: {:?}", err);
                         std::process::exit(1);
                     }
                 }
             }
             Err(error) => {
-                println!("Error: {:?}", error);
+                error!("Error: {:?}", error);
                 std::process::exit(1);
             }
         }
     }
 
     pub fn check_status(&self) -> Response {
+        info!("Checking status of dispatcher");
         self.send_massage(Request::CheckStatus)
     }
 
     pub fn update(&self, commit_id: String) -> Response {
+        info!("Updating dispatcher with commit id: {}", commit_id);
         self.send_massage(Request::Update(commit_id))
     }
 }

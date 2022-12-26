@@ -1,8 +1,8 @@
 mod dispatcher_lib;
 
-use std::thread::spawn;
-use std::sync::Arc;
 use dispatcher_lib::*;
+use std::sync::Arc;
+use std::thread::spawn;
 
 fn main() {
     let config = DispatcherConfig::build(std::env::args());
@@ -22,7 +22,7 @@ fn main() {
         let (socket, _) = server.tcp_listener.accept().unwrap();
         let socket_cloned = socket.try_clone().unwrap();
         let server_cloned = server.clone();
-        
+
         spawn(move || {
             handle_connection(socket_cloned, server_cloned);
         });

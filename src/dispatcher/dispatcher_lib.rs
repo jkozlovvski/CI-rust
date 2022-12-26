@@ -1,20 +1,19 @@
-
-
-use std::collections::{HashMap, HashSet as Set};
+use log::info;
 use serde::{Deserialize, Serialize};
-use std::net::SocketAddrV4;
+use std::collections::{HashMap, HashSet as Set};
+use std::io::Write;
 use std::net::Ipv4Addr;
-use std::sync::Mutex;
-use std::sync::atomic::AtomicBool;
+use std::net::SocketAddrV4;
 use std::net::TcpListener;
 use std::net::TcpStream;
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
-use std::time::Duration;
+use std::sync::Mutex;
 use std::thread::sleep;
-use std::io::Write;
+use std::time::Duration;
 
 pub struct DispatcherConfig {
-    pub socket: SocketAddrV4
+    pub socket: SocketAddrV4,
 }
 
 impl DispatcherConfig {
@@ -48,7 +47,7 @@ impl DispatcherConfig {
                     dispatcher_host.3,
                 ),
                 dispatcher_port,
-            )
+            ),
         }
     }
 }
@@ -96,8 +95,11 @@ pub fn runners_checker(server: Arc<Server>) {
         }
 
         for (i, runner) in server.runners.lock().unwrap().iter().enumerate() {
-            if let Err(err) = TcpStream::connect(runner) {
-                println!("Runner {} is dead: {}", runner, err);
+            if let Err(_) = TcpStream::connect(runner) {
+                info!(
+                    "Runner {} is dead, deleting runner from the pool of available ones",
+                    runner
+                );
                 server.runners.lock().unwrap().remove(i);
             }
         }
@@ -117,19 +119,23 @@ pub fn redistributor(server: Arc<Server>) {
     }
 }
 
-fn dispatch_test(commit: &String, server: Arc<Server>){
-        loop {
-            for runner in server.runners.lock().unwrap().iter() {
-                if let Ok(mut stream) = TcpStream::connect(runner) {
-                    let request = Request::Dispatch(commit.clone());
-                    serde_json::to_writer(&stream, &request).unwrap();
-                    stream.flush().unwrap();
-                    server.dispatched_commits.lock().unwrap().insert(commit.clone(), runner.to_string());
-                    server.pending_commits.lock().unwrap().remove(commit);
-                    break;
-                }
+fn dispatch_test(commit: &String, server: Arc<Server>) {
+    loop {
+        for runner in server.runners.lock().unwrap().iter() {
+            if let Ok(mut stream) = TcpStream::connect(runner) {
+                let request = Request::Dispatch(commit.clone());
+                serde_json::to_writer(&stream, &request).unwrap();
+                stream.flush().unwrap();
+                server
+                    .dispatched_commits
+                    .lock()
+                    .unwrap()
+                    .insert(commit.clone(), runner.to_string());
+                server.pending_commits.lock().unwrap().remove(commit);
+                break;
             }
         }
+    }
 }
 
 pub fn handle_connection(mut stream: TcpStream, server: Arc<Server>) {
@@ -151,10 +157,13 @@ pub fn handle_connection(mut stream: TcpStream, server: Arc<Server>) {
             }
             Ok(Request::Dispatch(commit)) => {
                 if server.runners.lock().unwrap().len() == 0 {
-                    serde_json::to_writer(&stream, &Response::Error("No runners available".to_string())).unwrap();
+                    serde_json::to_writer(
+                        &stream,
+                        &Response::Error("No runners available".to_string()),
+                    )
+                    .unwrap();
                     stream.flush().unwrap();
-                }
-                else {
+                } else {
                     dispatch_test(&commit, server.clone());
                     server.pending_commits.lock().unwrap().insert(commit);
                     serde_json::to_writer(&stream, &Response::Ok).unwrap();
@@ -162,7 +171,11 @@ pub fn handle_connection(mut stream: TcpStream, server: Arc<Server>) {
                 }
             }
             Ok(Request::Results((commit_id, result))) => {
-                server.dispatched_commits.lock().unwrap().insert(commit_id, result);
+                server
+                    .dispatched_commits
+                    .lock()
+                    .unwrap()
+                    .insert(commit_id, result);
                 serde_json::to_writer(&stream, &Response::Ok).unwrap();
                 stream.flush().unwrap();
             }
@@ -172,4 +185,3 @@ pub fn handle_connection(mut stream: TcpStream, server: Arc<Server>) {
         }
     }
 }
-
