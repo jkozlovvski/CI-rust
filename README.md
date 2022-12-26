@@ -15,13 +15,17 @@ It will be simple CLI system, it will be based on 3 components: an observer, a t
 As the components are complementary to each other (via communicating) it's tough to make distinction into two separate parts, but if I were to I would do it like that:
 
 1st part: Implementing observer and dispatcher
-2nd part: Implementing test-runner and tests
+2nd part: Implementing test-runner and tests (and CI-runner to run all services at once)
 
 ## Libraries
-serde, 
+serde, log
 
 ## Potential todo's and refactors left from part 1:
-
+- use tokio in the dispatcher service instead of periodically checking
+- use `clap` for command line parsing
+- make erros more robust using `anyhow` and `thiserror` 
+- (?) potentially change structure of project
+- (?) move all variables to local envs instead of parsing them command line
 
 ## How to run the certain binaries
 First change local_envs file to appropriate paths on your machine, then source local_envs, then you can run specified binary in this manner:
