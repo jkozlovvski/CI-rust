@@ -96,7 +96,8 @@ pub fn runners_checker(server: Arc<Server>) {
         }
 
         for (i, runner) in server.runners.lock().unwrap().iter().enumerate() {
-            if let Error = TcpStream::connect(runner) {
+            if let Err(err) = TcpStream::connect(runner) {
+                println!("Runner {} is dead: {}", runner, err);
                 server.runners.lock().unwrap().remove(i);
             }
         }

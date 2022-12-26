@@ -6,8 +6,10 @@ use std::path::Path;
 use std::process::Command;
 use std::thread::sleep;
 use std::time::Duration;
+use log::{info, error};
 
 fn main() {
+    env_logger::init();
     let config = DispatcherConfig::build(env::args());
     let script_path = get_path_to_script();
     let commit_path = Path::new(".commit_id");
@@ -19,6 +21,8 @@ fn main() {
             .arg(&config.socket.ip().to_string())
             .arg(&config.socket.port().to_string())
             .output();
+
+        info!("Running script: {:?}", command_result);
 
         match command_result {
             Ok(_) => {
@@ -36,7 +40,7 @@ fn main() {
                 }
             }
             Err(err) => {
-                println!("Error while executing script: {:?}", err);
+                error!("Error while running script: {:?}", err);
                 std::process::exit(1);
             }
         }
