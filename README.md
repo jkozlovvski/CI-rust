@@ -6,6 +6,8 @@
 ## Description
 The project is based on `https://aosabook.org/en/500L/a-continuous-integration-system.html`.
 It will be simple CLI system, it will be based on 3 components: an observer, a test job dispatcher, and a test runner. They are 3 separate processes and will communicate to each other via websockets.
+Whole flow can be described in diagram presented below:
+![](control-flow.png)
 
 ## Features
 - Running tests on the recent commit after 5 seconds period
@@ -18,7 +20,8 @@ As the components are complementary to each other (via communicating) it's tough
 2nd part: Implementing test-runner and tests (and CI-runner to run all services at once)
 
 ## Libraries
-serde, log
+1st part: serde, log
+2nd part: Tokio, clap, anyhow, thiserror
 
 ## Potential todo's and refactors left from part 1:
 - use tokio in the dispatcher service instead of periodically checking
@@ -26,6 +29,7 @@ serde, log
 - make erros more robust using `anyhow` and `thiserror` 
 - (?) potentially change structure of project
 - (?) move all variables to local envs instead of parsing them command line
+- test code (it couldn't have been done due to the nature of the project, all of the services are complementary)
 
 ## How to run the certain binaries
 First change local_envs file to appropriate paths on your machine, then source local_envs, then you can run specified binary in this manner:
