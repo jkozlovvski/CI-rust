@@ -1,1 +1,4 @@
+// absolute path to update_repo.sh file
 export UPDATE_SCRIPT_PATH=/Users/juliankozlowski/Desktop/Studia/Rust/continous_integration_tool/src/bash_scripts/update_repo.sh
+// absolute path to repo_observer directory
+export REPO_OBSERVER_PATH=/Users/juliankozlowski/Desktop/Studia/Rust/continous_integration_tool/src/repo_observer/test_repo_clone_obs

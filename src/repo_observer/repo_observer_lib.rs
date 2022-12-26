@@ -13,6 +13,16 @@ pub fn get_path_to_script() -> String {
     }
 }
 
+fn get_repo_path() -> String {
+    match env::var("REPO_OBSERVER_PATH") {
+        Ok(path) => path,
+        Err(err) => {
+            println!("Error while getting path to repository: {:?}", err);
+            std::process::exit(1);
+        }
+    }
+}
+
 pub fn read_commit_id(commit_path: String) -> String {
     fs::read_to_string(commit_path).unwrap()
 }
@@ -46,7 +56,7 @@ impl DispatcherConfig {
 
         let repository_path = match args.next() {
             Some(arg) => arg,
-            None => String::from("/Users/juliankozlowski/Desktop/Studia/Rust/continous_integration_tool/src/repo_observer/test_repo_clone_obs")
+            None => get_repo_path(),
         };
 
         DispatcherConfig {
