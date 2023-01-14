@@ -1,3 +1,4 @@
+#[path ="../lib/repo_observer_lib.rs"]
 mod repo_observer_lib;
 
 use log::{error, info};

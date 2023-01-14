@@ -1,3 +1,4 @@
+#[path ="../lib/dispatcher_lib.rs"]
 mod dispatcher_lib;
 
 use dispatcher_lib::*;
