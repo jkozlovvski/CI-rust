@@ -1,3 +1,3 @@
-export UPDATE_SCRIPT_PATH=/Users/juliankozlowski/Desktop/Studia/Rust/continous_integration_tool/src/bash_scripts/update_repo.sh
-export REPO_OBSERVER_PATH=/Users/juliankozlowski/Desktop/Studia/Rust/continous_integration_tool/src/repo_observer/test_repo_clone_obs
-export SCRIPTS_DIR_PATH=/Users/juliankozlowski/Desktop/Studia/Rust/continous_integration_tool/src/bash_scripts
+
+# repo observer path
+/Users/juliankozlowski/Desktop/Studia/Rust/continous_integration_tool/src/bin/test_repo_clone_obs
