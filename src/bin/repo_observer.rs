@@ -1,9 +1,12 @@
 #[path ="../lib/repo_observer_lib.rs"]
 mod repo_observer_lib;
+#[path ="../lib/common.rs"]
+mod common;
 
 use clap::Parser;
 use log::{error, info};
 use repo_observer_lib::*;
+use common::*;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -12,7 +15,7 @@ use std::time::Duration;
 
 fn main() {
     env_logger::init();
-    let config = DispatcherConfig::parse();
+    let config = RepoObserverConfig::parse();
     let (dispatcher_socket, repository_path) = (config.socket, config.repository_path);
 
     let script_path = PATH_TO_UPDATE_REPO_SCRIPT;

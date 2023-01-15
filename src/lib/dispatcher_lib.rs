@@ -1,8 +1,9 @@
+mod common;
+use common::*;
+
 use log::info;
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet as Set};
 use std::io::Write;
-use std::net::Ipv4Addr;
 use std::net::SocketAddrV4;
 use std::net::TcpListener;
 use std::net::TcpStream;
@@ -11,46 +12,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
-
-pub struct DispatcherConfig {
-    pub socket: SocketAddrV4,
-}
-
-impl DispatcherConfig {
-    pub fn build(mut args: impl Iterator<Item = String>) -> DispatcherConfig {
-        args.next();
-
-        let dispatcher_host: (u8, u8, u8, u8) = match args.next() {
-            Some(arg) => {
-                let mut host = arg.split('.');
-                (
-                    host.next().unwrap().parse::<u8>().unwrap(),
-                    host.next().unwrap().parse::<u8>().unwrap(),
-                    host.next().unwrap().parse::<u8>().unwrap(),
-                    host.next().unwrap().parse::<u8>().unwrap(),
-                )
-            }
-            None => (127, 0, 0, 1),
-        };
-
-        let dispatcher_port = match args.next() {
-            Some(arg) => arg.parse::<u16>().unwrap(),
-            None => 8080,
-        };
-
-        DispatcherConfig {
-            socket: SocketAddrV4::new(
-                Ipv4Addr::new(
-                    dispatcher_host.0,
-                    dispatcher_host.1,
-                    dispatcher_host.2,
-                    dispatcher_host.3,
-                ),
-                dispatcher_port,
-            ),
-        }
-    }
-}
+use serde::Deserialize;
 
 #[derive(Debug)]
 pub struct Server {
@@ -59,20 +21,6 @@ pub struct Server {
     pub runners: Mutex<Vec<SocketAddrV4>>,
     pub dispatched_commits: Mutex<HashMap<String, String>>,
     pub pending_commits: Mutex<Set<String>>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-enum Request {
-    Status,
-    Register(SocketAddrV4),
-    Dispatch(String),
-    Results((String, String)),
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-enum Response {
-    Ok,
-    Error(String),
 }
 
 impl Server {
@@ -144,11 +92,14 @@ pub fn handle_connection(mut stream: TcpStream, server: Arc<Server>) {
         if !server.alive.load(std::sync::atomic::Ordering::Relaxed) {
             break;
         }
-
+        
         match Request::deserialize(&mut deserializer) {
             Ok(Request::Status) => {
                 serde_json::to_writer(&stream, &Response::Ok).unwrap();
                 stream.flush().unwrap();
+            }
+            Ok(Request::Update(commit)) => {
+                info!("Updating commit {}", commit);
             }
             Ok(Request::Register(runner)) => {
                 server.runners.lock().unwrap().push(runner);
@@ -180,6 +131,7 @@ pub fn handle_connection(mut stream: TcpStream, server: Arc<Server>) {
                 stream.flush().unwrap();
             }
             Err(_) => {
+                info!("Something wrong happened");
                 break;
             }
         }
