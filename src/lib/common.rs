@@ -29,7 +29,7 @@ pub enum Response {
 pub fn send_massage(socket: &SocketAddrV4, request: Request) -> Response {
     match TcpStream::connect(socket) {
         Ok(mut stream) => {
-            info!("Connected to socket: {:?}", socket);
+            info!("Sending request: {:?}", request);
             serde_json::to_writer(&stream, &request).unwrap();
             stream.flush().unwrap();
 

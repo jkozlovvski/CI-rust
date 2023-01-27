@@ -3,7 +3,7 @@ use common::*;
 
 use log::info;
 use std::collections::{HashMap, HashSet as Set};
-use std::io::Write;
+use std::io::{Write, Read};
 use std::net::SocketAddrV4;
 use std::net::TcpListener;
 use std::net::TcpStream;
@@ -61,8 +61,8 @@ pub fn redistributor(server: Arc<Server>) {
         }
 
         for commit in server.pending_commits.lock().unwrap().iter() {
+            info!("Redistributing commit: {}", commit);
             dispatch_test(commit, server.clone());
-            sleep(Duration::from_secs(5));
         }
     }
 }
@@ -71,18 +71,29 @@ fn dispatch_test(commit: &String, server: Arc<Server>) {
     loop {
         for runner in server.runners.lock().unwrap().iter() {
             if let Ok(mut stream) = TcpStream::connect(runner) {
-                let request = Request::Dispatch(commit.clone());
-                serde_json::to_writer(&stream, &request).unwrap();
+                // we're sending a status request to the runner
+                serde_json::to_writer(&stream, &Request::Status).unwrap();
                 stream.flush().unwrap();
-                server
-                    .dispatched_commits
-                    .lock()
-                    .unwrap()
-                    .insert(commit.clone(), runner.to_string());
-                server.pending_commits.lock().unwrap().remove(commit);
-                break;
+
+                let mut deserializer = serde_json::Deserializer::from_reader(stream.try_clone().unwrap());
+                let response: Response = Response::deserialize(&mut deserializer).unwrap();
+
+                if let Response::Ok = response {
+                    // runner is not busy
+                    let request = Request::Dispatch(commit.clone());
+                    serde_json::to_writer(&stream, &request).unwrap();
+                    stream.flush().unwrap();
+                    server
+                        .dispatched_commits
+                        .lock()
+                        .unwrap()
+                        .insert(commit.clone(), runner.to_string());
+                    server.pending_commits.lock().unwrap().remove(commit);
+                    break;  
+                } 
             }
         }
+        sleep(Duration::from_secs(2));
     }
 }
 
@@ -95,6 +106,7 @@ pub fn handle_connection(mut stream: TcpStream, server: Arc<Server>) {
         
         match Request::deserialize(&mut deserializer) {
             Ok(Request::Status) => {
+                info!("Status request");
                 serde_json::to_writer(&stream, &Response::Ok).unwrap();
                 stream.flush().unwrap();
             }
@@ -102,6 +114,7 @@ pub fn handle_connection(mut stream: TcpStream, server: Arc<Server>) {
                 info!("Updating commit {}", commit);
             }
             Ok(Request::Register(runner)) => {
+                info!("Registering runner {}", runner);
                 server.runners.lock().unwrap().push(runner);
                 serde_json::to_writer(&stream, &Response::Ok).unwrap();
                 stream.flush().unwrap();
@@ -130,8 +143,8 @@ pub fn handle_connection(mut stream: TcpStream, server: Arc<Server>) {
                 serde_json::to_writer(&stream, &Response::Ok).unwrap();
                 stream.flush().unwrap();
             }
-            Err(_) => {
-                info!("Something wrong happened");
+            Err(err) => {
+                info!("Unknown request with error: {}", err);
                 break;
             }
         }

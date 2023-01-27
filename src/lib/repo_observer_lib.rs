@@ -20,7 +20,7 @@ pub fn read_commit_id(commit_path: &str) -> String {
 pub struct RepoObserverConfig {
     #[clap(long, default_value = "127.0.0.1:8888")]
     pub socket: SocketAddrV4,
-    #[clap(long, default_value = "/Users/juliankozlowski/Desktop/Studia/Rust/continous_integration_tool/src/bin/test_repo_clone_runner")]
+    #[clap(long, default_value = "/Users/juliankozlowski/Desktop/Studia/Rust/continous_integration_tool/src/bin/test_repo_clone_obs")]
     pub repository_path: String,
 }
 
