@@ -17,7 +17,6 @@ pub enum Request {
     Update(String),
     Register(SocketAddrV4),
     Dispatch(String),
-    Results((String, String)),
 }
 
 #[derive(Serialize, Deserialize)]

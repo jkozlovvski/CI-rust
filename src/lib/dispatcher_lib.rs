@@ -3,7 +3,7 @@ use common::*;
 
 use log::info;
 use std::collections::{HashMap, HashSet as Set};
-use std::io::{Write, Read};
+use std::io::Write;
 use std::net::SocketAddrV4;
 use std::net::TcpListener;
 use std::net::TcpStream;
@@ -133,15 +133,6 @@ pub fn handle_connection(mut stream: TcpStream, server: Arc<Server>) {
                     serde_json::to_writer(&stream, &Response::Ok).unwrap();
                     stream.flush().unwrap();
                 }
-            }
-            Ok(Request::Results((commit_id, result))) => {
-                server
-                    .dispatched_commits
-                    .lock()
-                    .unwrap()
-                    .insert(commit_id, result);
-                serde_json::to_writer(&stream, &Response::Ok).unwrap();
-                stream.flush().unwrap();
             }
             Err(err) => {
                 info!("Unknown request with error: {}", err);

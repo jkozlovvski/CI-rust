@@ -41,13 +41,13 @@ pub fn dispatcher_checker(server: Arc<TestRunner>, dispatcher_alive: Arc<AtomicB
     }
 }
 
-pub fn handle_connection(mut stream: TcpStream, busy: bool, server: Arc<TestRunner>) {
+pub fn handle_connection(stream: TcpStream, busy: Arc<AtomicBool>, server: Arc<TestRunner>) {
     let mut deserializer = serde_json::Deserializer::from_reader(stream.try_clone().unwrap());
     match Request::deserialize(&mut deserializer) {
         Ok(request) => {
             match request {
                 Request::Status => {
-                    if busy {
+                    if busy.load(std::sync::atomic::Ordering::Relaxed) {
                         serde_json::to_writer(&stream, &Response::Error("Busy".to_string())).unwrap();
                     }
                     else {
@@ -56,7 +56,7 @@ pub fn handle_connection(mut stream: TcpStream, busy: bool, server: Arc<TestRunn
                 }
                 Request::Dispatch(commid_id) => {
                     info!("Dispatching test with id: {}", commid_id);
-                    run_tests(server);
+                    run_tests(server, commid_id);
                     serde_json::to_writer(&stream, &Response::Ok).unwrap();
                 }
                 _ => {
@@ -85,23 +85,11 @@ pub fn send_socket_info(server: Arc<TestRunner>) {
     }
 }
 
-fn send_tests_results(server: Arc<TestRunner>, results: String, commit_id: String) {
-    info!("Sending test results to dispatcher");
-    match send_massage(&server.dispatcher_socket, Request::Results((commit_id, results))) {
-        Response::Ok => {
-            info!("Test results sent");
-        }
-        Response::Error(err) => {
-            error!("Error while sending test results: {:?}", err);
-            std::process::exit(1);
-        }
-    }
-}
-
-pub fn run_tests(server: Arc<TestRunner>) {
+pub fn run_tests(server: Arc<TestRunner>, commit_id: String) {
     // updating repo
     let output = Command::new(TEST_SCRIPT_PATH)
         .arg(server.repository_path.clone())
+        .arg(commit_id)
         .output()
         .expect("failed to execute script");
 
