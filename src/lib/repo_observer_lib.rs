@@ -24,9 +24,9 @@ pub struct RepoObserverConfig {
     pub repository_path: String,
 }
 
-pub fn update(socket: &SocketAddrV4, commit_path: &Path) -> Response {
+pub fn dispatch(socket: &SocketAddrV4, commit_path: &Path) -> Response {
     let commit_id = read_commit_id(commit_path.to_str().unwrap());
     info!("Updating dispatcher with commit id: {}", commit_id);
-    send_massage(socket, Request::Update(commit_id))
+    send_massage(socket, Request::Dispatch(commit_id))
 }
 

@@ -1,11 +1,11 @@
-#[path ="../lib/dispatcher_lib.rs"]
-mod dispatcher_lib;
-#[path ="../lib/common.rs"]
+#[path = "../lib/common.rs"]
 mod common;
+#[path = "../lib/dispatcher_lib.rs"]
+mod dispatcher_lib;
 
 use clap::Parser;
-use dispatcher_lib::*;
 use common::*;
+use dispatcher_lib::*;
 use std::sync::Arc;
 use std::thread::spawn;
 
@@ -17,11 +17,6 @@ fn main() {
     let cloned = server.clone();
     spawn(move || {
         redistributor(cloned);
-    });
-
-    let cloned = server.clone();
-    spawn(move || {
-        runners_checker(cloned);
     });
 
     loop {

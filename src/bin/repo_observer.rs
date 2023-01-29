@@ -1,12 +1,12 @@
-#[path ="../lib/repo_observer_lib.rs"]
-mod repo_observer_lib;
-#[path ="../lib/common.rs"]
+#[path = "../lib/common.rs"]
 mod common;
+#[path = "../lib/repo_observer_lib.rs"]
+mod repo_observer_lib;
 
 use clap::Parser;
+use common::*;
 use log::{error, info};
 use repo_observer_lib::*;
-use common::*;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -29,9 +29,7 @@ fn main() {
     info!("Commit path: {:?}", commit_path);
 
     loop {
-        let command_result = Command::new(&script_path)
-            .arg(&repository_path)
-            .output();
+        let command_result = Command::new(script_path).arg(&repository_path).output();
 
         info!(
             "Running script in repo_observer, result: {:?}",
@@ -43,7 +41,7 @@ fn main() {
                 if commit_path.exists() {
                     info!("Found commit path");
                     check_status(&dispatcher_socket);
-                    update(&dispatcher_socket, commit_path);
+                    dispatch(&dispatcher_socket, commit_path);
                 }
             }
             Err(err) => {

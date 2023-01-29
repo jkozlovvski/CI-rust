@@ -2,6 +2,7 @@ mod common;
 use common::*;
 
 use log::info;
+use serde::Deserialize;
 use std::collections::{HashMap, HashSet as Set};
 use std::io::Write;
 use std::net::SocketAddrV4;
@@ -12,7 +13,6 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
-use serde::Deserialize;
 
 #[derive(Debug)]
 pub struct Server {
@@ -36,63 +36,68 @@ impl Server {
     }
 }
 
-pub fn runners_checker(server: Arc<Server>) {
-    loop {
-        if !server.alive.load(std::sync::atomic::Ordering::Relaxed) {
-            break;
-        }
-
-        for (i, runner) in server.runners.lock().unwrap().iter().enumerate() {
-            if TcpStream::connect(runner).is_err() {
-                info!(
-                    "Runner {} is dead, deleting runner from the pool of available ones",
-                    runner
-                );
-                server.runners.lock().unwrap().remove(i);
-            }
-        }
-    }
-}
-
 pub fn redistributor(server: Arc<Server>) {
     loop {
         if !server.alive.load(std::sync::atomic::Ordering::Relaxed) {
             break;
         }
 
-        for commit in server.pending_commits.lock().unwrap().iter() {
-            info!("Redistributing commit: {}", commit);
-            dispatch_test(commit, server.clone());
+        let mut dead_runners = Vec::new();
+
+        {
+            info!("Runners: {:?}", server.runners.lock().unwrap());
         }
-    }
-}
 
-fn dispatch_test(commit: &String, server: Arc<Server>) {
-    loop {
-        for runner in server.runners.lock().unwrap().iter() {
-            if let Ok(mut stream) = TcpStream::connect(runner) {
-                // we're sending a status request to the runner
-                serde_json::to_writer(&stream, &Request::Status).unwrap();
-                stream.flush().unwrap();
+        for runner in server.runners.lock().unwrap().iter_mut() {
+            match TcpStream::connect(runner.clone()) {
+                Ok(mut stream) => {
+                    info!("Runner {} is alive", runner);
+                    let mut dispatched_commits = server.dispatched_commits.lock().unwrap();
+                    let mut pending_commits = server.pending_commits.lock().unwrap();
+                    let mut commit_to_delete = Vec::new();
 
-                let mut deserializer = serde_json::Deserializer::from_reader(stream.try_clone().unwrap());
-                let response: Response = Response::deserialize(&mut deserializer).unwrap();
+                    for commit in pending_commits.iter() {
+                        if dispatched_commits.contains_key(commit) {
+                            continue;
+                        }
 
-                if let Response::Ok = response {
-                    // runner is not busy
-                    let request = Request::Dispatch(commit.clone());
-                    serde_json::to_writer(&stream, &request).unwrap();
-                    stream.flush().unwrap();
-                    server
-                        .dispatched_commits
-                        .lock()
-                        .unwrap()
-                        .insert(commit.clone(), runner.to_string());
-                    server.pending_commits.lock().unwrap().remove(commit);
-                    break;  
-                } 
+                        info!("Dispatching commit: {}", commit);
+                        serde_json::to_writer(&stream, &Request::Dispatch(commit.clone()))
+                            .unwrap();
+                        stream.flush().unwrap();
+
+                        let mut deserializer =
+                            serde_json::Deserializer::from_reader(stream.try_clone().unwrap());
+                        let response: Response = Response::deserialize(&mut deserializer).unwrap();
+
+                        match response {
+                            Response::Ok => {
+                                dispatched_commits.insert(commit.clone(), runner.to_string());
+                                commit_to_delete.push(commit.clone());
+                            }
+                            Response::Error(_) => {
+                                info!("Runner {} is busy", runner);
+                                break;
+                            }
+                        }
+                    }
+
+                    for commit in commit_to_delete {
+                        pending_commits.remove(&commit);
+                    }
+                }
+                Err(_) => {
+                    info!("Runner {} is dead", runner);
+                    dead_runners.push(runner.clone());
+                }
             }
         }
+
+        for dead_runner in dead_runners.iter() {
+            info!("Removing dead runner: {}", dead_runner);
+            server.runners.lock().unwrap().retain(|runner| runner != dead_runner);
+        }
+        
         sleep(Duration::from_secs(2));
     }
 }
@@ -103,7 +108,7 @@ pub fn handle_connection(mut stream: TcpStream, server: Arc<Server>) {
         if !server.alive.load(std::sync::atomic::Ordering::Relaxed) {
             break;
         }
-        
+
         match Request::deserialize(&mut deserializer) {
             Ok(Request::Status) => {
                 info!("Status request");
@@ -112,6 +117,7 @@ pub fn handle_connection(mut stream: TcpStream, server: Arc<Server>) {
             }
             Ok(Request::Update(commit)) => {
                 info!("Updating commit {}", commit);
+                serde_json::to_writer(&stream, &Response::Ok).unwrap();
             }
             Ok(Request::Register(runner)) => {
                 info!("Registering runner {}", runner);
@@ -120,22 +126,12 @@ pub fn handle_connection(mut stream: TcpStream, server: Arc<Server>) {
                 stream.flush().unwrap();
             }
             Ok(Request::Dispatch(commit)) => {
-                if server.runners.lock().unwrap().len() == 0 {
-                    serde_json::to_writer(
-                        &stream,
-                        &Response::Error("No runners available".to_string()),
-                    )
-                    .unwrap();
-                    stream.flush().unwrap();
-                } else {
-                    dispatch_test(&commit, server.clone());
-                    server.pending_commits.lock().unwrap().insert(commit);
-                    serde_json::to_writer(&stream, &Response::Ok).unwrap();
-                    stream.flush().unwrap();
-                }
+                info!("Adding commit to dispatched {}", commit);
+                server.pending_commits.lock().unwrap().insert(commit);
+                serde_json::to_writer(&stream, &Response::Ok).unwrap();
+                stream.flush().unwrap();
             }
-            Err(err) => {
-                info!("Unknown request with error: {}", err);
+            Err(_) => {
                 break;
             }
         }

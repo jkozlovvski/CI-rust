@@ -1,17 +1,14 @@
-#[path = "../lib/common.rs"]
-mod common;
-
 #[path = "../lib/test_runner_lib.rs"]
 mod test_runner;
 
-use std::{sync::atomic::AtomicBool, thread::spawn};
-use std::sync::Arc;
 use clap::Parser;
-use std::env;
-use std::path::PathBuf;
-use std::net::*;
-use test_runner::*;
 use log::info;
+use std::env;
+use std::net::*;
+use std::path::PathBuf;
+use std::sync::Arc;
+use std::{sync::atomic::AtomicBool, thread::spawn};
+use test_runner::*;
 
 fn main() {
     env_logger::init();
@@ -27,20 +24,19 @@ fn main() {
 
     let dispatcher_alive_cloned = dispatcher_alive.clone();
     let server_cloned = server.clone();
-    spawn (move || {
+    spawn(move || {
         dispatcher_checker(server_cloned, dispatcher_alive_cloned);
     });
-    
+
     let listener = TcpListener::bind(server.test_runner_socket).unwrap();
     send_socket_info(server.clone());
 
     loop {
-        if dispatcher_alive.load(std::sync::atomic::Ordering::Relaxed) {
-           break; 
+        if !dispatcher_alive.load(std::sync::atomic::Ordering::Relaxed) {
+            break;
         }
 
         let (socket, _) = listener.accept().unwrap();
         handle_connection(socket, busy.clone(), server.clone());
     }
-
 }

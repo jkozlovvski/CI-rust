@@ -1,9 +1,9 @@
 use clap::Parser;
-use std::net::SocketAddrV4;
-use serde::{Serialize, Deserialize};
+use log::{error, info};
+use serde::{Deserialize, Serialize};
 use std::io::Write;
+use std::net::SocketAddrV4;
 use std::net::TcpStream;
-use log::{info, error};
 
 #[derive(Parser, Debug)]
 pub struct DispatcherConfig {
