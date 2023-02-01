@@ -2,9 +2,7 @@ use super::common;
 use log::info;
 use serde::Deserialize;
 
-use common::{
-    send_massage, Request, Response
-};
+use common::{Request, Response};
 
 use std::{
     collections::{HashMap, HashSet as Set},
@@ -50,7 +48,7 @@ pub fn redistributor(server: Arc<Server>) {
         let mut dead_runners = Vec::new();
 
         for runner in server.runners.lock().unwrap().iter_mut() {
-            match TcpStream::connect(runner.clone()) {
+            match TcpStream::connect(*runner) {
                 Ok(mut stream) => {
                     info!("Runner {} is alive", runner);
                     let mut dispatched_commits = server.dispatched_commits.lock().unwrap();
@@ -63,8 +61,7 @@ pub fn redistributor(server: Arc<Server>) {
                         }
 
                         info!("Dispatching commit: {}", commit);
-                        serde_json::to_writer(&stream, &Request::Dispatch(commit.clone()))
-                            .unwrap();
+                        serde_json::to_writer(&stream, &Request::Dispatch(commit.clone())).unwrap();
                         stream.flush().unwrap();
 
                         let mut deserializer =
@@ -89,16 +86,20 @@ pub fn redistributor(server: Arc<Server>) {
                 }
                 Err(_) => {
                     info!("Runner {} is dead", runner);
-                    dead_runners.push(runner.clone());
+                    dead_runners.push(*runner);
                 }
             }
         }
 
         for dead_runner in dead_runners.iter() {
             info!("Removing dead runner: {}", dead_runner);
-            server.runners.lock().unwrap().retain(|runner| runner != dead_runner);
+            server
+                .runners
+                .lock()
+                .unwrap()
+                .retain(|runner| runner != dead_runner);
         }
-        
+
         sleep(Duration::from_secs(2));
     }
 }

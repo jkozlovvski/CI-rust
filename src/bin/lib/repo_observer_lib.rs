@@ -1,13 +1,9 @@
 use super::common;
 
-use common::{
-    send_massage, Request, Response
-};
-use std::{
-    fs, net::SocketAddrV4, path::Path,
-};
-use log::info;
 use clap::Parser;
+use common::{send_massage, Request, Response};
+use log::info;
+use std::{fs, net::SocketAddrV4, path::Path};
 
 pub fn read_commit_id(commit_path: &str) -> String {
     fs::read_to_string(commit_path).unwrap()
@@ -26,4 +22,3 @@ pub fn dispatch(socket: &SocketAddrV4, commit_path: &Path) -> Response {
     info!("Updating dispatcher with commit id: {}", commit_id);
     send_massage(socket, Request::Dispatch(commit_id))
 }
-

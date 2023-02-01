@@ -1,12 +1,13 @@
 use super::common;
 
 use clap::Parser;
+use common::{check_status, send_massage, Request, Response};
 use log::{error, info};
 use serde::Deserialize;
 use std::{
-    fs::File, io::prelude::*, net::SocketAddrV4, net::TcpStream, process::Command, sync::Arc, sync::atomic::AtomicBool, thread::sleep, time::Duration,
+    fs::File, io::prelude::*, net::SocketAddrV4, net::TcpStream, process::Command,
+    sync::atomic::AtomicBool, sync::Arc, thread::sleep, time::Duration,
 };
-use common::{check_status, Response, send_massage, Request};
 
 #[derive(Parser, Debug)]
 pub struct TestRunner {
@@ -54,13 +55,10 @@ pub fn handle_connection(stream: TcpStream, busy: Arc<AtomicBool>, server: Arc<T
             }
             _ => {
                 error!("Invalid request");
-                // std::process::exit(1);
+                std::process::exit(1);
             }
         },
-        Err(err) => {
-            error!("Error while reading request: {:?}", err);
-            // std::process::exit(1);
-        }
+        Err(_) => (),
     }
 }
 

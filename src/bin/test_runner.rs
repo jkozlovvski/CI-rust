@@ -1,14 +1,14 @@
 mod lib;
 
 use clap::Parser;
+use lib::common::*;
+use lib::test_runner_lib::*;
 use log::{error, info};
 use std::env;
 use std::net::*;
 use std::path::Path;
 use std::sync::Arc;
 use std::{sync::atomic::AtomicBool, thread::spawn};
-use lib::test_runner_lib::*;
-use lib::common::*;
 
 fn main() {
     env_logger::init();
@@ -30,7 +30,14 @@ fn main() {
         dispatcher_checker(server_cloned, dispatcher_alive_cloned);
     });
 
-    let listener = TcpListener::bind(server.test_runner_socket).unwrap();
+    let listener = match TcpListener::bind(server.test_runner_socket) {
+        Ok(listener) => listener,
+        Err(err) => {
+            error!("Error while binding test runner to socket: {:?}", err);
+            std::process::exit(1);
+        }
+    };
+
     send_socket_info(server.clone());
 
     loop {

@@ -1,20 +1,16 @@
 mod lib;
 
 use clap::Parser;
+use lib::common::Response;
+use lib::{common::*, repo_observer_lib::*};
 use log::{error, info};
-use lib::{
-    common::*, repo_observer_lib::*
-};
-
-use std::{
-    env, process::Command, thread::sleep, time::Duration, path::Path
-};
+use std::{env, path::Path, process::Command, thread::sleep, time::Duration};
 
 fn main() {
     env_logger::init();
     let config = RepoObserverConfig::parse();
     let (dispatcher_socket, repository_path) = (config.socket, config.repository_path);
-    
+
     let working_dir = Path::new(&scripts_repository);
     if let Err(err) = env::set_current_dir(working_dir) {
         error!("Error while setting working directory: {:?}", err);
@@ -40,8 +36,25 @@ fn main() {
             Ok(_) => {
                 if commit_path.exists() {
                     info!("Found commit path");
-                    check_status(&dispatcher_socket);
-                    dispatch(&dispatcher_socket, commit_path);
+
+                    match check_status(&dispatcher_socket) {
+                        Response::Ok => {
+                            info!("Dispatcher is alive");
+                        }
+                        Response::Error(err) => {
+                            error!("Dispatcher is dead: {:?}", err);
+                            std::process::exit(1);
+                        }
+                    }
+
+                    match dispatch(&dispatcher_socket, commit_path) {
+                        Response::Ok => {
+                            info!("Dispatched commit");
+                        }
+                        Response::Error(err) => {
+                            error!("Error while dispatching commit: {:?}", err);
+                        }
+                    }
                 }
             }
             Err(err) => {
