@@ -1,14 +1,14 @@
-#[path = "../lib/test_runner_lib.rs"]
-mod test_runner;
+mod lib;
 
 use clap::Parser;
-use log::info;
+use log::{error, info};
 use std::env;
 use std::net::*;
-use std::path::PathBuf;
+use std::path::Path;
 use std::sync::Arc;
 use std::{sync::atomic::AtomicBool, thread::spawn};
-use test_runner::*;
+use lib::test_runner_lib::*;
+use lib::common::*;
 
 fn main() {
     env_logger::init();
@@ -16,9 +16,11 @@ fn main() {
     let server = Arc::new(TestRunner::parse());
     let busy = Arc::new(AtomicBool::new(false));
 
-    let binding = PathBuf::from(TEST_SCRIPT_PATH);
-    let working_dir = binding.parent().unwrap();
-    env::set_current_dir(working_dir).unwrap();
+    let working_dir = Path::new(&scripts_repository);
+    if let Err(err) = env::set_current_dir(working_dir) {
+        error!("Error while setting working directory: {:?}", err);
+        std::process::exit(1);
+    }
 
     info!("Working directory: {:?}", working_dir);
 

@@ -1,11 +1,8 @@
-#[path = "../lib/common.rs"]
-mod common;
-#[path = "../lib/dispatcher_lib.rs"]
-mod dispatcher_lib;
+mod lib;
 
 use clap::Parser;
-use common::*;
-use dispatcher_lib::*;
+use lib::common::*;
+use lib::dispatcher_lib::*;
 use std::sync::Arc;
 use std::thread::spawn;
 

@@ -1,20 +1,12 @@
-mod common;
-use common::*;
+use super::common;
 
 use clap::Parser;
 use log::{error, info};
 use serde::Deserialize;
-use std::fs::File;
-use std::io::prelude::*;
-use std::net::SocketAddrV4;
-use std::net::TcpStream;
-use std::process::Command;
-use std::sync::atomic::AtomicBool;
-use std::sync::Arc;
-use std::thread::sleep;
-use std::time::Duration;
-
-pub static TEST_SCRIPT_PATH: &str = "/Users/juliankozlowski/Desktop/Studia/Rust/continous_integration_tool/bash_scripts/test_runner.sh";
+use std::{
+    fs::File, io::prelude::*, net::SocketAddrV4, net::TcpStream, process::Command, sync::Arc, sync::atomic::AtomicBool, thread::sleep, time::Duration,
+};
+use common::{check_status, Response, send_massage, Request};
 
 #[derive(Parser, Debug)]
 pub struct TestRunner {
@@ -88,8 +80,7 @@ pub fn send_socket_info(server: Arc<TestRunner>) {
 }
 
 pub fn run_tests(server: Arc<TestRunner>, commit_id: String) {
-    // updating repo
-    let output = Command::new(TEST_SCRIPT_PATH)
+    let output = Command::new("./test_runner.sh")
         .arg(server.repository_path.clone())
         .arg(commit_id)
         .output()

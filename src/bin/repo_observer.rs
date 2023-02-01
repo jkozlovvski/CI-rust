@@ -1,28 +1,28 @@
-#[path = "../lib/common.rs"]
-mod common;
-#[path = "../lib/repo_observer_lib.rs"]
-mod repo_observer_lib;
+mod lib;
 
 use clap::Parser;
-use common::*;
 use log::{error, info};
-use repo_observer_lib::*;
-use std::env;
-use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::thread::sleep;
-use std::time::Duration;
+use lib::{
+    common::*, repo_observer_lib::*
+};
+
+use std::{
+    env, process::Command, thread::sleep, time::Duration, path::Path
+};
 
 fn main() {
     env_logger::init();
     let config = RepoObserverConfig::parse();
     let (dispatcher_socket, repository_path) = (config.socket, config.repository_path);
+    
+    let working_dir = Path::new(&scripts_repository);
+    if let Err(err) = env::set_current_dir(working_dir) {
+        error!("Error while setting working directory: {:?}", err);
+        std::process::exit(1);
+    }
 
-    let script_path = PATH_TO_UPDATE_REPO_SCRIPT;
-    let binding = PathBuf::from(script_path);
-    let working_dir = binding.parent().unwrap();
-    env::set_current_dir(working_dir).unwrap();
     let commit_path = Path::new(".commit_id");
+    let script_path = Path::new("./update_repo.sh");
 
     info!("Working directory: {:?}", working_dir);
     info!("Script path: {:?}", script_path);

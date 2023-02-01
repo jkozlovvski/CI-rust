@@ -1,18 +1,23 @@
-mod common;
-use common::*;
-
+use super::common;
 use log::info;
 use serde::Deserialize;
-use std::collections::{HashMap, HashSet as Set};
-use std::io::Write;
-use std::net::SocketAddrV4;
-use std::net::TcpListener;
-use std::net::TcpStream;
-use std::sync::atomic::AtomicBool;
-use std::sync::Arc;
-use std::sync::Mutex;
-use std::thread::sleep;
-use std::time::Duration;
+
+use common::{
+    send_massage, Request, Response
+};
+
+use std::{
+    collections::{HashMap, HashSet as Set},
+    io::Write,
+    net::SocketAddrV4,
+    net::TcpListener,
+    net::TcpStream,
+    sync::atomic::AtomicBool,
+    sync::Arc,
+    sync::Mutex,
+    thread::sleep,
+    time::Duration,
+};
 
 #[derive(Debug)]
 pub struct Server {
@@ -43,10 +48,6 @@ pub fn redistributor(server: Arc<Server>) {
         }
 
         let mut dead_runners = Vec::new();
-
-        {
-            info!("Runners: {:?}", server.runners.lock().unwrap());
-        }
 
         for runner in server.runners.lock().unwrap().iter_mut() {
             match TcpStream::connect(runner.clone()) {
