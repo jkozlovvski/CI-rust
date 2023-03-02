@@ -1,0 +1,3 @@
+[submodule "test_repo"]
+	path = test_repo
+	url = ./test_repo
