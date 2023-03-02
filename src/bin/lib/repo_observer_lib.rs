@@ -13,7 +13,7 @@ pub fn read_commit_id(commit_path: &str) -> String {
 pub struct RepoObserverConfig {
     #[clap(long, default_value = "127.0.0.1:8888")]
     pub socket: SocketAddrV4,
-    #[clap(long, default_value = "../src/bin/test_repo_clone_obs")]
+    #[clap(long, default_value = "../src/bin/test_repo_clone_observer")]
     pub repository_path: String,
 }
 

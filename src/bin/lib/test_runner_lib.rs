@@ -17,7 +17,7 @@ pub struct TestRunner {
     pub test_runner_socket: SocketAddrV4,
     #[clap(
         long,
-        default_value = "/Users/juliankozlowski/Desktop/Studia/Rust/continous_integration_tool/src/bin/test_repo_clone_runner"
+        default_value = "../src/bin/test_repo_clone_runner"
     )]
     pub repository_path: String,
 }
