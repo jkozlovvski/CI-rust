@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 source run_or_fail.sh
 rm -f .commit_id

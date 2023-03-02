@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 run_or_fail() {
   local explanation=$1
