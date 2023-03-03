@@ -3,7 +3,7 @@
 source run_or_fail.sh
 rm -f .commit_id
 run_or_fail "Repository folder not found!" pushd $1 1> /dev/null
-run_or_fail "Could not reset git" git reset --hard HEAD
+run_or_fail "Could not reset git" git reset --hard
 
 COMMIT=$(run_or_fail "Could not call 'git log' on repository" git log -n1)
 if [ $? != 0 ]; then
