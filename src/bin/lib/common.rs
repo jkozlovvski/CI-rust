@@ -9,7 +9,7 @@ pub static scripts_repository: &str = "bash_scripts";
 
 #[derive(Parser, Debug)]
 pub struct DispatcherConfig {
-    #[clap(long, default_value = "127.0.0.1:8888")]
+    #[clap(long, default_value = "127.0.0.1:9000")]
     pub socket: SocketAddrV4,
 }
 

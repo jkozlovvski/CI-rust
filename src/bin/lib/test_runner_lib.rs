@@ -11,7 +11,7 @@ use std::{
 
 #[derive(Parser, Debug)]
 pub struct TestRunner {
-    #[clap(long, default_value = "127.0.0.1:8888")]
+    #[clap(long, default_value = "127.0.0.1:9000")]
     pub dispatcher_socket: SocketAddrV4,
     #[clap(long, default_value = "127.0.0.1:10030")]
     pub test_runner_socket: SocketAddrV4,
