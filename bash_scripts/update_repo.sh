@@ -1,6 +1,15 @@
 #!/bin/bash
 
-source run_or_fail.sh
+run_or_fail() {
+  local explanation=$1
+  shift 1
+  "$@"
+  if [ $? != 0 ]; then
+    echo $explanation 1>&2
+    exit 1
+  fi
+}
+
 rm -f .commit_id
 run_or_fail "Repository folder not found!" pushd $1 1> /dev/null
 run_or_fail "Could not reset git" git reset --hard HEAD
