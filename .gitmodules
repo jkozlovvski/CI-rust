@@ -4,3 +4,6 @@
 [submodule "src/bin/test_repo_clone_runner"]
 	path = src/bin/test_repo_clone_runner
 	url = https://github.com/jkozlovvski/Test.git
+[submodule "testing_repo"]
+	path = testing_repo
+	url = git@github.com:jkozlovvski/Test.git
