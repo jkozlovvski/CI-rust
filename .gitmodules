@@ -1,6 +1,6 @@
 [submodule "src/bin/test_repo_clone_observer"]
 	path = src/bin/test_repo_clone_observer
-	url = https://github.com/jkozlovvski/CI-rust.git
+	url = https://github.com/jkozlovvski/Test.git
 [submodule "src/bin/test_repo_clone_runner"]
 	path = src/bin/test_repo_clone_runner
-	url = https://github.com/jkozlovvski/CI-rust.git
+	url = https://github.com/jkozlovvski/Test.git
